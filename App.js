@@ -6,7 +6,7 @@ import io from 'socket.io-client';
  // Replace with your server's hostname or IP address and port number
 
 
- const SOCKET_SERVER_URL ='http://192.168.0.105:12345';
+ const SOCKET_SERVER_URL ='http://192.168.54.66:12344';
  const socket = io(SOCKET_SERVER_URL);
 export default function App() {
 
@@ -14,7 +14,6 @@ export default function App() {
 
   const [initialTouchPosition, setInitialTouchPosition] = useState({ x: 0, y: 0 });
   const [inputValue, setInputValue] = useState('http://192.168.0.105:5000');
-
 
 
 
@@ -111,13 +110,11 @@ const movementD=(key)=>{
             <Text   style={{ color: '#FF0000' }}>D</Text>
           </TouchableOpacity>
         </View>
-        <TouchableOpacity onPress={movementW} style={styles.wasd}>
+        <TouchableOpacity onLongPress={movementW} style={styles.wasd}>
           <Text  style={{ color: '#FF0000' }}>W</Text>
         </TouchableOpacity>
       </View>
-      <TouchableOpacity  style={{backgroundColor:'blue',height:25,width:25}}>
-        <Text >?</Text>
-      </TouchableOpacity>
+
       <TouchableOpacity onPress={handleScope} style={styles.scope}>
         <Text>SCOPE</Text>
       </TouchableOpacity>
@@ -132,12 +129,12 @@ const movementD=(key)=>{
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    marginRight:150,
-    backgroundColor: 'white',
+    backgroundColor: 'black',
     alignItems: 'center',
     justifyContent: 'center',
   },
   joystick: {
+    marginRight:160,
     borderColor: 'black',
     flexDirection: 'row',
     alignItems: 'center',
@@ -153,9 +150,9 @@ const styles = StyleSheet.create({
   },
   scope: {
     marginTop: 250,
-    marginLeft:120,
-    width: 70,
-    height: 70,
+    marginLeft:-80,
+    width: 50,
+    height: 50,
     backgroundColor: 'orange',
     justifyContent: 'center',
     alignItems: 'center',
@@ -163,10 +160,10 @@ const styles = StyleSheet.create({
   },
   fire: {
     marginTop:10,
-    marginLeft:120,
+    marginLeft:-80,
     backgroundColor: 'red',
-    width: 70,
-    height: 70,
+    width: 50,
+    height: 50,
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 10,

@@ -1,43 +1,53 @@
-from flask import Flask, request, jsonify
+import socket
 import pyautogui
+import json
 
-app = Flask(__name__)
+# Set up the server socket
+server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server_socket.bind(('0.0.0.0', 12345))
+server_socket.listen(5)
 
-GYRO_SENSITIVITY_X = 40
-GYRO_SENSITIVITY_Z = 40
-MOUSE_SENSITIVITY = 3
+print("Server is listening for incoming connections...")
 
-@app.route('/gyro', methods=['POST'])
-def handle_gyro():
-    data = request.get_json()
-    gyro_data = data.get('gyroData', {})
-    cur_x, cur_y = pyautogui.position()
-    target_x = cur_x - gyro_data.get('x', 0) * GYRO_SENSITIVITY_X
-    target_y = cur_y + gyro_data.get('z', 0) * GYRO_SENSITIVITY_Z
-    pyautogui.moveTo(target_x, target_y)
-    return 'Cursor Moved'
+# Accept client connections
+client_socket, addr = server_socket.accept()
+print('Client connected:', addr)
 
-@app.route('/fire', methods=['POST'])
-def handle_fire():
-    print('Fire button pressed')
-    pyautogui.click(button='left')
-    return 'Fire button pressed'
+while True:
+    data = client_socket.recv(1024).decode('utf-8')
+    if not data:
+        break
+    
+    # Parse JSON data
+    try:
+        parsed_data = json.loads(data)
+        event_type = parsed_data.get('event')
+        event_data = parsed_data.get('data', {})
+        print(event_data)
+        if event_type == 'gyro':
+            gyro_data = event_data.get('gyroData', {})
+            cur = pyautogui.position()
+            target_x = cur[0] - gyro_data.get('x', 0) * 60
+            target_y = cur[1] + gyro_data.get('y', 0) * 60
+            pyautogui.moveTo(target_x, target_y)
 
-@app.route('/touch', methods=['POST'])
-def handle_touch():
-    data = request.get_json()
-    touch_data = data.get('touchData', {})
-    cur_x, cur_y = pyautogui.position()
-    new_x = cur_x + touch_data.get('y', 0) * MOUSE_SENSITIVITY
-    new_y = cur_y - touch_data.get('x', 0) * MOUSE_SENSITIVITY
-    pyautogui.moveTo(new_x, new_y)
-    return 'Cursor Moved'
+        elif event_type == 'movement':
+            key = event_data.get('key', '')
+            pyautogui.press(key)
 
-@app.route('/scope', methods=['POST'])
-def handle_scope():
-    print('Scope button pressed')
-    pyautogui.click(button='right')
-    return 'Scope button pressed'
+        elif event_type == 'touch':
+            touch_data = event_data.get('touchData', {})
+            x, y = touch_data.get('x', 0), touch_data.get('y', 0)
+            cur = pyautogui.position()
+            pyautogui.moveTo(cur[0] + y * 3, cur[1] - x * 3)
 
-if __name__ == '__main__':
-    app.run(port=5000)
+        elif event_type == 'fire':
+            pyautogui.click(button='left')
+
+        elif event_type == 'scope':
+            pyautogui.click(button='right')
+
+    except json.JSONDecodeError:
+        print('Error decoding JSON data:', data)
+
+client_socket.close()
